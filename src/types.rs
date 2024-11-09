@@ -1,9 +1,10 @@
 use crate::errors::SmtpResponseError;
 
+#[derive(Default)]
 pub struct Email<'a> {
     pub sender: &'a str,
     pub recipients: Vec<&'a str>,
-    pub content: &'a str,
+    pub content: String,
     pub size: usize,
 }
 
