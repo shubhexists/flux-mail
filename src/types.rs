@@ -2,6 +2,7 @@ use crate::errors::SmtpResponseError;
 
 #[derive(Default)]
 pub struct Email {
+    #[allow(dead_code)]
     pub sender: String,
     pub recipients: Vec<String>,
     pub content: String,
@@ -13,6 +14,7 @@ pub enum CurrentStates {
     Greeted,
     AwaitingRecipient(Email),
     AwaitingData(Email),
+    #[allow(dead_code)]
     DataReceived(Email),
 }
 

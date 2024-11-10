@@ -2,7 +2,8 @@ use crate::{
     errors::{SmtpErrorCode, SmtpResponseError},
     is_valid_email,
     types::{CurrentStates, Email, SMTPResult},
-    CLOSING_CONNECTION, DATA_READY_PROMPT, MAX_EMAIL_SIZE, MAX_RECIPIENT_COUNT, SUCCESS_RESPONSE,
+    AUTH_OK, CLOSING_CONNECTION, DATA_READY_PROMPT, MAX_EMAIL_SIZE, MAX_RECIPIENT_COUNT,
+    SUCCESS_RESPONSE,
 };
 use std::str::SplitWhitespace;
 
@@ -43,10 +44,22 @@ impl HandleCurrentState {
         let previous_state: CurrentStates =
             std::mem::replace(&mut self.current_state, CurrentStates::Initial);
         match (command.as_str(), previous_state) {
-            ("helo" | "ehlo", CurrentStates::Initial) => {
+            ("ehlo", CurrentStates::Initial) => {
                 self.current_state = CurrentStates::Greeted;
                 Ok(self.greeting_message.as_bytes())
             }
+            ("helo", CurrentStates::Initial) => {
+                self.current_state = CurrentStates::Greeted;
+                Ok(SUCCESS_RESPONSE)
+            }
+            ("noop", _) | ("help", _) | ("info", _) | ("vrfy", _) | ("expn", _) => {
+                Ok(SUCCESS_RESPONSE)
+            }
+            ("rset", _) => {
+                self.current_state = CurrentStates::Initial;
+                Ok(SUCCESS_RESPONSE)
+            }
+            ("auth", _) => Ok(AUTH_OK),
             ("mail", CurrentStates::Greeted) => {
                 let sender: &str = message_parts
                     .next()
@@ -89,6 +102,11 @@ impl HandleCurrentState {
                 self.current_state = CurrentStates::AwaitingData(email);
                 Ok(DATA_READY_PROMPT)
             }
+            ("quit", CurrentStates::AwaitingData(mail)) => {
+                self.current_state = CurrentStates::DataReceived(mail);
+                Ok(CLOSING_CONNECTION)
+            }
+            ("quit", _) => Ok(CLOSING_CONNECTION),
             (_, CurrentStates::AwaitingData(mut email)) => {
                 email.size += client_message.len();
                 if email.size > self.max_email_size {
@@ -108,7 +126,6 @@ impl HandleCurrentState {
                 email.content.push_str(client_message);
                 Ok(response)
             }
-            ("quit", _) => Ok(CLOSING_CONNECTION),
             _ => Err(SmtpResponseError::new(&SmtpErrorCode::CommandUnrecognized)),
         }
     }

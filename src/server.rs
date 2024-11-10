@@ -67,20 +67,4 @@ impl Server {
         }
         Ok(())
     }
-
-    pub async fn serve(mut self) -> Result<(), Box<dyn Error>> {
-        self.connection.write_all(INITIAL_GREETING).await?;
-        let mut buf: Vec<u8> = vec![0; 1024 * 1024];
-        loop {
-            let n: usize = self.connection.read(&mut buf).await?;
-            if n == 0 {
-                self.state_handler.process_smtp_command("quit").ok();
-                break;
-            }
-            let msg: &str = std::str::from_utf8(&buf[..n])?;
-            let response: &[u8] = self.state_handler.process_smtp_command(msg)?;
-
-        }
-        todo!()
-    }
 }
