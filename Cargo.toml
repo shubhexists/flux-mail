@@ -1,7 +1,14 @@
 [package]
-name = "smtp"
+name = "flux-mail"
+description = "A simple implementation of SMTP Protocol in Rust"
 version = "0.1.0"
 edition = "2021"
+author = "Shubham singh	<github: github.com/shubhexists>"
+repository = "https://github.com/shubhexists/flux-mail"
+license-file = "LICENSE"
+categories = ["email"]
+keywords = ["smtp", "email", "mail"]
+readme = "README.md"
 
 [dependencies]
 tokio = { version = "1.41.1", features = ["full"] }
