@@ -1,19 +1,19 @@
 use crate::errors::SmtpResponseError;
 
 #[derive(Default)]
-pub struct Email<'a> {
-    pub sender: &'a str,
-    pub recipients: Vec<&'a str>,
+pub struct Email {
+    pub sender: String,
+    pub recipients: Vec<String>,
     pub content: String,
     pub size: usize,
 }
 
-pub enum CurrentStates<'a> {
+pub enum CurrentStates {
     Initial,
     Greeted,
-    AwaitingRecipient(Email<'a>),
-    AwaitingData(Email<'a>),
-    DataReceived(Email<'a>),
+    AwaitingRecipient(Email),
+    AwaitingData(Email),
+    DataReceived(Email),
 }
 
-pub type SMTPResult<'a, T> = Result<&'a T, SmtpResponseError<'a>>;
+pub type SMTPResult<'a, T> = Result<T, SmtpResponseError<'a>>;

@@ -1,5 +1,6 @@
+#[derive(Debug)]
 pub struct SmtpResponseError<'a> {
-    code: &'a SmtpErrorCode,
+    pub code: &'a SmtpErrorCode,
     message: &'a str,
 }
 
@@ -10,28 +11,31 @@ impl<'a> SmtpResponseError<'a> {
             message: code.as_message(),
         }
     }
+
+    pub fn format_response(&self) -> String {
+        format!("{:?} {}\n", self.code, self.message)
+    }
 }
 
+#[derive(Debug)]
 pub enum SmtpErrorCode {
     SyntaxError,
     CommandUnrecognized,
     InvalidParameters,
     MailboxUnavailable,
     InsufficientSystemStorage,
-    ActionNotTaken,
     MessageSizeExceedsLimit,
     TransactionFailed,
 }
 
 impl SmtpErrorCode {
-    fn as_code(&self) -> u16 {
+    pub fn as_code(&self) -> u16 {
         match self {
             SmtpErrorCode::SyntaxError => 500,
             SmtpErrorCode::CommandUnrecognized => 500,
             SmtpErrorCode::InvalidParameters => 501,
             SmtpErrorCode::MailboxUnavailable => 550,
             SmtpErrorCode::InsufficientSystemStorage => 452,
-            SmtpErrorCode::ActionNotTaken => 550,
             SmtpErrorCode::MessageSizeExceedsLimit => 552,
             SmtpErrorCode::TransactionFailed => 554,
         }
@@ -48,8 +52,6 @@ impl SmtpErrorCode {
             SmtpErrorCode::InsufficientSystemStorage => {
                 "Requested action not taken (insufficient system storage)"
             }
-            SmtpErrorCode::ActionNotTaken => "Requested action not taken",
-
             SmtpErrorCode::MessageSizeExceedsLimit => {
                 "Requested action aborted (message size exceeds limit)"
             }

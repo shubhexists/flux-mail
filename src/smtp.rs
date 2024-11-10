@@ -6,13 +6,13 @@ use crate::{
 };
 use std::str::SplitWhitespace;
 
-struct HandleCurrentState<'a> {
-    current_state: CurrentStates<'a>,
+pub struct HandleCurrentState {
+    current_state: CurrentStates,
     greeting_message: String,
     max_email_size: usize,
 }
 
-impl<'a> HandleCurrentState<'a> {
+impl HandleCurrentState {
     pub fn new(server_domain: impl AsRef<str>) -> Self {
         let server_domain: &str = server_domain.as_ref();
         let greeting_message: String = format!(
@@ -29,7 +29,7 @@ impl<'a> HandleCurrentState<'a> {
         }
     }
 
-    pub fn process_smtp_command(&'a mut self, client_message: &'a str) -> SMTPResult<'a, [u8]> {
+    pub fn process_smtp_command<'a>(&mut self, client_message: &str) -> SMTPResult<'a, &[u8]> {
         let message: &str = client_message.trim();
         if message.is_empty() {
             return Err(SmtpResponseError::new(&SmtpErrorCode::SyntaxError));
@@ -40,7 +40,7 @@ impl<'a> HandleCurrentState<'a> {
             .ok_or_else(|| SmtpResponseError::new(&SmtpErrorCode::SyntaxError))?
             .to_lowercase();
 
-        let previous_state: CurrentStates<'a> =
+        let previous_state: CurrentStates =
             std::mem::replace(&mut self.current_state, CurrentStates::Initial);
         match (command.as_str(), previous_state) {
             ("helo" | "ehlo", CurrentStates::Initial) => {
@@ -50,18 +50,15 @@ impl<'a> HandleCurrentState<'a> {
             ("mail", CurrentStates::Greeted) => {
                 let sender: &str = message_parts
                     .next()
-                    .and_then(|s| s.strip_prefix("FROM:"))
+                    .and_then(|s: &str| s.strip_prefix("FROM:"))
                     .ok_or_else(|| SmtpResponseError::new(&SmtpErrorCode::InvalidParameters))?;
 
-                match is_valid_email(sender) {
-                    false => {
-                        return Err(SmtpResponseError::new(&SmtpErrorCode::MailboxUnavailable))
-                    }
-                    true => {}
+                if !is_valid_email(sender) {
+                    return Err(SmtpResponseError::new(&SmtpErrorCode::MailboxUnavailable));
                 }
 
                 self.current_state = CurrentStates::AwaitingRecipient(Email {
-                    sender,
+                    sender: sender.to_string(),
                     ..Default::default()
                 });
                 Ok(SUCCESS_RESPONSE)
@@ -72,56 +69,44 @@ impl<'a> HandleCurrentState<'a> {
                         &SmtpErrorCode::InsufficientSystemStorage,
                     ));
                 }
-                let reciever: &str = message_parts
+                let receiver: &str = message_parts
                     .next()
-                    .and_then(|s| s.strip_prefix("TO:"))
+                    .and_then(|s: &str| s.strip_prefix("TO:"))
                     .ok_or_else(|| SmtpResponseError::new(&SmtpErrorCode::InvalidParameters))?;
 
-                match is_valid_email(reciever) {
-                    false => {
-                        return Err(SmtpResponseError::new(&SmtpErrorCode::MailboxUnavailable))
-                    }
-                    true => {}
+                if !is_valid_email(receiver) {
+                    return Err(SmtpResponseError::new(&SmtpErrorCode::MailboxUnavailable));
                 }
 
-                email.recipients.push(reciever);
+                email.recipients.push(receiver.to_string());
                 self.current_state = CurrentStates::AwaitingRecipient(email);
                 Ok(SUCCESS_RESPONSE)
             }
             ("data", CurrentStates::AwaitingRecipient(email)) => {
-                match email.recipients.is_empty() {
-                    true => return Err(SmtpResponseError::new(&SmtpErrorCode::TransactionFailed)),
-                    false => {}
-                };
+                if email.recipients.is_empty() {
+                    return Err(SmtpResponseError::new(&SmtpErrorCode::TransactionFailed));
+                }
                 self.current_state = CurrentStates::AwaitingData(email);
                 Ok(DATA_READY_PROMPT)
             }
             (_, CurrentStates::AwaitingData(mut email)) => {
                 email.size += client_message.len();
-                match email.size > MAX_EMAIL_SIZE {
-                    true => {}
-                    false => {
-                        return Err(SmtpResponseError::new(
-                            &SmtpErrorCode::MessageSizeExceedsLimit,
-                        ));
-                    }
+                if email.size > self.max_email_size {
+                    return Err(SmtpResponseError::new(
+                        &SmtpErrorCode::MessageSizeExceedsLimit,
+                    ));
+                }
+
+                let response: &[u8] = if client_message.ends_with("\r\n.\r\n") {
+                    self.current_state = CurrentStates::DataReceived(std::mem::take(&mut email));
+                    SUCCESS_RESPONSE
+                } else {
+                    self.current_state = CurrentStates::AwaitingData(std::mem::take(&mut email));
+                    b""
                 };
 
-                let response: &[u8] = match client_message.ends_with("\r\n.\r\n") {
-                    true => {
-                        self.current_state =
-                            CurrentStates::DataReceived(std::mem::take(&mut email));
-                        SUCCESS_RESPONSE
-                    }
-                    false => {
-                        self.current_state =
-                            CurrentStates::AwaitingData(std::mem::take(&mut email));
-                        b""
-                    }
-                };
-
-                email.content += client_message;
-                Ok(&response)
+                email.content.push_str(client_message);
+                Ok(response)
             }
             ("quit", _) => Ok(CLOSING_CONNECTION),
             _ => Err(SmtpResponseError::new(&SmtpErrorCode::CommandUnrecognized)),
