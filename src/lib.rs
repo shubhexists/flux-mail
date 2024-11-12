@@ -6,7 +6,7 @@ use server::Server;
 use std::sync::Arc;
 use std::time::Duration;
 use std::{error::Error, net::SocketAddr};
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, TcpStream};
 use tokio::time::timeout;
 
 const MAX_EMAIL_SIZE: usize = 10_485_760;
@@ -27,12 +27,15 @@ pub async fn start_server(addr: SocketAddr, domain: String) -> Result<(), Box<dy
     let listener: TcpListener = TcpListener::bind(&addr).await?;
     let domain: Arc<String> = Arc::new(domain);
 
+    tracing::info!("Server Started On Port: {}", addr);
+
     loop {
-        let (stream, _addr) = listener.accept().await?;
+        let (stream, _addr): (TcpStream, SocketAddr) = listener.accept().await?;
         let domain: Arc<String> = Arc::clone(&domain);
 
         tokio::task::LocalSet::new()
             .run_until(async move {
+                tracing::info!("Ping recieved on SMTP Server");
                 let smtp: Server = Server::new(domain.as_str(), stream).await?;
                 match timeout(Duration::from_secs(300), smtp.connection()).await {
                     Ok(Ok(_)) => Ok(()),
