@@ -138,16 +138,18 @@ impl HandleCurrentState {
                         &SmtpErrorCode::MessageSizeExceedsLimit,
                     ));
                 }
-
-                let response: &[u8] = if client_message.ends_with("\r\n.\r\n") {
+                println!("{}", email.size);
+                email.content.push_str(client_message);
+                println!("{}", client_message);
+                let response: &[u8] = if email.content.ends_with("\n.\n")
+                    || email.content.ends_with("\r\n.\r\n")
+                {
                     self.current_state = CurrentStates::DataReceived(std::mem::take(&mut email));
                     SUCCESS_RESPONSE
                 } else {
                     self.current_state = CurrentStates::AwaitingData(std::mem::take(&mut email));
                     b""
                 };
-
-                email.content.push_str(client_message);
                 Ok(response)
             }
             _ => {
