@@ -1,6 +1,6 @@
 use crate::errors::SmtpResponseError;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Email {
     #[allow(dead_code)]
     pub sender: String,

@@ -1,26 +1,30 @@
 use crate::{
-    errors::SmtpErrorCode, smtp::HandleCurrentState, CLOSING_CONNECTION, INITIAL_GREETING, TIMEOUT,
+    database::DatabaseClient, errors::SmtpErrorCode, smtp::HandleCurrentState, CLOSING_CONNECTION,
+    INITIAL_GREETING, TIMEOUT,
 };
-use std::error::Error;
+use std::{error::Error, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     time::timeout,
 };
 use tracing::{span::Entered, Level, Span};
 
-pub struct Server {
+pub struct Server<'a> {
     connection: tokio::net::TcpStream,
     state_handler: HandleCurrentState,
+    db: &'a Arc<DatabaseClient>,
 }
 
-impl Server {
+impl<'a> Server<'a> {
     pub async fn new(
         server_domain: impl AsRef<str>,
         connection: tokio::net::TcpStream,
+        db: &'a Arc<DatabaseClient>,
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             connection,
             state_handler: HandleCurrentState::new(server_domain),
+            db,
         })
     }
 
@@ -46,7 +50,11 @@ impl Server {
                             return Err(Box::new(e));
                         }
                     };
-                    match self.state_handler.process_smtp_command(message) {
+                    match self
+                        .state_handler
+                        .process_smtp_command(message, &self.db)
+                        .await
+                    {
                         Ok(response) => {
                             if response != b"" {
                                 self.connection.write_all(response).await?;

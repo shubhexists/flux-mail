@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f0f0f0;
+  --foreground: #000000;
+  --accent: #ff6b6b;
+  --secondary: #4ecdc4;
+}
+
+.dark {
+  --background: #1a1a1a;
+  --foreground: #ffffff;
+  --accent: #ff6b6b;
+  --secondary: #4ecdc4;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: "Courier New", Courier, monospace;
+}
+
+.neutro-box {
+  border: 4px solid var(--foreground);
+  box-shadow: 8px 8px 0 var(--foreground);
+  transition: all 0.3s ease;
+}
+
+.neutro-box:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 12px 12px 0 var(--foreground);
+}
+
+.neutro-button {
+  border: 4px solid var(--foreground);
+  background-color: var(--accent);
+  color: var(--background);
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.neutro-button:hover {
+  background-color: var(--foreground);
+  color: var(--accent);
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 var(--foreground);
+}
+
+.neutro-input {
+  border: 4px solid var(--foreground);
+  background-color: var(--background);
+  color: var(--foreground);
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease-in-out;
+  width: 100%;
+}
+
+.neutro-input:focus {
+  outline: none;
+  box-shadow: 4px 4px 0 var(--foreground);
+  transform: translate(-2px, -2px);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.pulse-animation {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  .neutro-box {
+    box-shadow: 6px 6px 0 var(--foreground);
+  }
+
+  .neutro-box:hover {
+    box-shadow: 8px 8px 0 var(--foreground);
+  }
+
+  .neutro-button:hover {
+    box-shadow: 6px 6px 0 var(--foreground);
+  }
+}

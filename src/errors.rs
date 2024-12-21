@@ -46,9 +46,7 @@ impl SmtpErrorCode {
             SmtpErrorCode::SyntaxError => "Syntax error, command unrecognized",
             SmtpErrorCode::CommandUnrecognized => "Command unrecognized",
             SmtpErrorCode::InvalidParameters => "Syntax error in parameters or arguments",
-
             SmtpErrorCode::MailboxUnavailable => "Requested action not taken (mailbox unavailable)",
-
             SmtpErrorCode::InsufficientSystemStorage => {
                 "Requested action not taken (insufficient system storage)"
             }

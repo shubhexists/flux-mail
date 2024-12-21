@@ -1,11 +1,13 @@
 use crate::{
+    database::DatabaseClient,
     errors::{SmtpErrorCode, SmtpResponseError},
     is_valid_email,
     types::{CurrentStates, Email, SMTPResult},
     AUTH_OK, CLOSING_CONNECTION, DATA_READY_PROMPT, MAX_EMAIL_SIZE, MAX_RECIPIENT_COUNT,
     SUCCESS_RESPONSE,
 };
-use std::str::SplitWhitespace;
+use std::{str::SplitWhitespace, sync::Arc};
+use tracing::{error, info};
 
 pub struct HandleCurrentState {
     current_state: CurrentStates,
@@ -32,7 +34,11 @@ impl HandleCurrentState {
         }
     }
 
-    pub fn process_smtp_command<'a>(&mut self, client_message: &str) -> SMTPResult<'a, &[u8]> {
+    pub async fn process_smtp_command<'a>(
+        &mut self,
+        client_message: &str,
+        db: &Arc<DatabaseClient>,
+    ) -> SMTPResult<'a, &[u8]> {
         let message: &str = client_message.trim();
         if message.is_empty() {
             return Err(SmtpResponseError::new(&SmtpErrorCode::SyntaxError));
@@ -121,15 +127,37 @@ impl HandleCurrentState {
                 self.current_state = CurrentStates::AwaitingData(email);
                 Ok(DATA_READY_PROMPT)
             }
-            ("quit", CurrentStates::AwaitingData(mail)) => {
-                tracing::trace!("RECIEVED: Closing Data Stream");
-                self.current_state = CurrentStates::DataReceived(mail);
-                Ok(CLOSING_CONNECTION)
-            }
-            ("quit", _) => {
-                tracing::warn!("Unexpected QUIT, Closing !!");
-                Ok(CLOSING_CONNECTION)
-            }
+            ("quit", state) => match state {
+                CurrentStates::Initial | CurrentStates::Greeted => {
+                    tracing::warn!("Unexpected QUIT, Closing !!");
+                    Ok(CLOSING_CONNECTION)
+                }
+                CurrentStates::AwaitingRecipient(email) => {
+                    tracing::warn!("Unexpected QUIT, Closing !!");
+                    match db.add_mail(email.clone()).await.is_err() {
+                        true => error!("Unable to add mail in database"),
+                        false => info!("Mail successfully added to database"),
+                    };
+                    Ok(CLOSING_CONNECTION)
+                }
+                CurrentStates::AwaitingData(email) => {
+                    tracing::trace!("RECIEVED: Closing Data Stream");
+                    match db.add_mail(email.clone()).await.is_err() {
+                        true => error!("Unable to add mail in database"),
+                        false => info!("Mail successfully added to database"),
+                    };
+                    self.current_state = CurrentStates::DataReceived(email);
+                    Ok(CLOSING_CONNECTION)
+                }
+                CurrentStates::DataReceived(email) => {
+                    tracing::warn!("Unexpected QUIT, Closing !!");
+                    match db.add_mail(email.clone()).await.is_err() {
+                        true => error!("Unable to add mail in database"),
+                        false => info!("Mail successfully added to database"),
+                    };
+                    Ok(CLOSING_CONNECTION)
+                }
+            },
             (_, CurrentStates::AwaitingData(mut email)) => {
                 email.size += client_message.len();
                 if email.size > self.max_email_size {
@@ -138,9 +166,7 @@ impl HandleCurrentState {
                         &SmtpErrorCode::MessageSizeExceedsLimit,
                     ));
                 }
-                println!("{}", email.size);
                 email.content.push_str(client_message);
-                println!("{}", client_message);
                 let response: &[u8] = if email.content.ends_with("\n.\n")
                     || email.content.ends_with("\r\n.\r\n")
                 {
