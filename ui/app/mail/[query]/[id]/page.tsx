@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { use } from "react";
 
 const animeDetails = {
   1: {
@@ -29,9 +30,10 @@ const animeDetails = {
 export default function AnimePage({
   params,
 }: {
-  params: { id: string; query: string };
+  params: Promise<{ id: string; query: string }>;
 }) {
-  const anime = animeDetails[params.id as unknown as keyof typeof animeDetails];
+  const param = use(params);
+  const anime = animeDetails[param.id as unknown as keyof typeof animeDetails];
 
   if (!anime) {
     return <div>Anime not found</div>;
@@ -40,7 +42,7 @@ export default function AnimePage({
   return (
     <div className="space-y-8">
       <Link
-        href={`/search?q=${params.query}`}
+        href={`/search?q=${param.query}`}
         className="neutro-button inline-block mb-8 text-2xl"
       >
         BACK

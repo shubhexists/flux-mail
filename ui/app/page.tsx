@@ -46,7 +46,7 @@ export default function Home() {
             Temp Mail Service
           </h2>
           <p className="text-xl sm:text-2xl">
-            Remember: Your mails are public. Don't use it for important mails.
+            Remember: Your mails are public. Don&apos;t use it for important mails.
             Use it to suscribe for all unwanted services.
           </p>
         </div>
