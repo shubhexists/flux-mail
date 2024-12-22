@@ -17,6 +17,7 @@ function SearchResultsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const query = searchParams.get("q") || "";
+  const selectedEmailId = searchParams.get("email");
 
   useEffect(() => {
     if (!query) {
@@ -47,30 +48,58 @@ function SearchResultsContent() {
     return <div>Loading...</div>;
   }
 
+  const selectedEmail = selectedEmailId
+    ? emails[parseInt(selectedEmailId)]
+    : null;
+
   return (
     <div className="space-y-8">
-      <h2 className="text-4xl font-bold mb-6">
-        Mails for &quot;{query}@flux.shubh.sh&quot;
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {emails.map((email, index) => (
-          <Link href={`/mail/${query}/${index}`} key={index}>
-            <div className="neutro-box p-6 hover:bg-accent hover:text-background transition-colors">
-              <h2 className="text-4xl font-bold mb-2">
-                {email.sender.toUpperCase()}
-              </h2>
-              <p className="text-2xl">
-                {new Date(email.date).toLocaleDateString()}
-              </p>
-              <p className="text-lg truncate">{email.data}</p>
-            </div>
+      {selectedEmail ? (
+        <>
+          <Link
+            href={`/search?q=${query}`}
+            className="neutro-button inline-block mb-8 text-2xl"
+          >
+            BACK
           </Link>
-        ))}
-      </div>
-      {emails.length === 0 && (
-        <p className="text-2xl text-center">
-          No results found. Try a different search term.
-        </p>
+          <div className="neutro-box p-8">
+            <h1 className="text-6xl font-bold mb-4">
+              {selectedEmail.sender.toUpperCase()}
+            </h1>
+            <p className="text-3xl mb-4">
+              {new Date(selectedEmail.date).toLocaleDateString()}
+            </p>
+            <p className="text-2xl mb-4">To: {selectedEmail.recipients}</p>
+            <p className="text-2xl">{selectedEmail.data}</p>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 className="text-4xl font-bold mb-6">
+            Mails for &quot;{query}@flux.shubh.sh&quot;
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {emails.map((email, index) => (
+              <Link href={`/search?q=${query}&email=${index}`} key={index}>
+                <div className="neutro-box p-6 hover:bg-accent transition-colors">
+                  <h2 className="text-4xl font-bold mb-2">
+                    {email.sender.toUpperCase()}
+                  </h2>
+                  <p className="text-2xl">
+                    {new Date(email.date).toLocaleDateString()}
+                  </p>
+                  <p className="text-lg truncate">{email.data}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+          {emails.length === 0 && (
+            <p className="text-2xl text-center">
+              No mails found. Try sending a mail to <br></br>&apos;{query}
+              @flux.shubh.sh&apos; <br></br> and Try Again.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
