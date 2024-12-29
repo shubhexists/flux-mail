@@ -24,8 +24,6 @@ export async function parseEmailContent(
       attachments: parsed.attachments || [],
       date: parsed.date || new Date(),
     };
-
-    console.log(a);
     return a;
   } catch (error) {
     console.error("Error parsing email:", error);

@@ -64,23 +64,24 @@ function SearchResultsContent() {
             BACK
           </Link>
           <div className="neutro-box p-8 overflow-hidden">
-            <h1 className="text-3xl sm:text-6xl font-bold mb-4 break-words">
+            <h1 className="text-3xl sm:text-4xl font-bold mb-4 break-words">
               {selectedEmail.data.subject}
             </h1>
-            <p className="text-2xl sm:text-3xl mb-4">
+            <p className="text-xl sm:text-2xl mb-4">
               {new Date(selectedEmail.date).toLocaleDateString()}
             </p>
-            <p className="text-xl sm:text-2xl mb-4 break-words">
+            <p className="text-lg sm:text-xl mb-2 break-words">
               From: {selectedEmail.data.from}
             </p>
-            <p className="text-xl sm:text-2xl mb-4 break-words">
+            <p className="text-lg sm:text-xl mb-4 break-words">
               To: {selectedEmail.recipients}
             </p>
-            <p className="text-xl sm:text-2xl whitespace-pre-wrap break-words">
+            <div className="border-t border-foreground pt-4 mt-4">
               <div
+                className="text-lg sm:text-xl whitespace-pre-wrap break-words prose dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: selectedEmail.data.html }}
               ></div>
-            </p>
+            </div>
           </div>
         </>
       ) : (
@@ -91,22 +92,27 @@ function SearchResultsContent() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {emails.map((email, index) => (
               <Link href={`/search?q=${query}&email=${index}`} key={index}>
-                <div className="neutro-box p-6 hover:bg-accent transition-colors">
-                  <h2 className="text-3xl sm:text-4xl font-bold mb-2 break-words">
-                    {email.data.subject}
-                  </h2>
-                  <p className="text-xl sm:text-2xl">
+                <div className="neutro-box p-6 hover:bg-accent transition-colors h-[200px] flex flex-col">
+                  <h3 className="text-2xl sm:text-3xl font-bold mb-2 break-words line-clamp-2 flex-none">
+                    {email.data.subject || "(No Subject)"}
+                  </h3>
+                  <p className="text-lg sm:text-xl mb-2 flex-none">
                     {new Date(email.date).toLocaleDateString()}
                   </p>
-                  <p className="text-lg truncate">{email.data.toString()}</p>
+                  <p className="text-base sm:text-lg line-clamp-2 overflow-hidden">
+                    {email.data.text}
+                  </p>
                 </div>
               </Link>
             ))}
           </div>
           {emails.length === 0 && (
-            <p className="text-xl sm:text-2xl text-center">
+            <p className="text-xl sm:text-2xl text-center neutro-box p-8">
               No mails found. Try sending a mail to <br />
-              &apos;{query}@flux.shubh.sh&apos; <br />
+              <span className="font-bold">
+                &apos;{query}@flux.shubh.sh&apos;
+              </span>{" "}
+              <br />
               and Try Again.
             </p>
           )}
@@ -118,7 +124,7 @@ function SearchResultsContent() {
 
 export default function SearchResults() {
   return (
-    <div className="space-y-8 p-4">
+    <div className="space-y-8 p-4 max-w-6xl mx-auto">
       <header className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
         <Link
           href="/"

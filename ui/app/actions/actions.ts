@@ -8,8 +8,8 @@ export async function searchEmails(recipientQuery: string) {
     const result = await pool.query(
       `SELECT date, sender, recipients, data 
        FROM mail 
-       WHERE recipients LIKE $1`,
-      [`%${recipientQuery}%`]
+       WHERE recipients = $1`,
+      [`<${recipientQuery}>`]
     );
     const output = [];
     for (const i of result.rows) {

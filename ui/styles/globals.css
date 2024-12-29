@@ -106,3 +106,17 @@ body {
     box-shadow: 6px 6px 0 var(--foreground);
   }
 }
+
+.prose {
+  max-width: none;
+}
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+}
