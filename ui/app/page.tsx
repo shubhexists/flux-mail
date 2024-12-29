@@ -12,7 +12,7 @@ export default function Home() {
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchTerm)}`);
+      router.push(`/search?q=${encodeURIComponent(searchTerm.toLowerCase())}`);
     }
   };
 

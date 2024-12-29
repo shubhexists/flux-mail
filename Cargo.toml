@@ -1,7 +1,7 @@
 [package]
 name = "flux-mail"
-description = "A simple implementation of SMTP Protocol in Rust"
-version = "0.1.0"
+description = "A simple implementation of SMTP Protocol as a temporary mail service in Rust"
+version = "0.2.0"
 edition = "2021"
 author = "Shubham singh	<github: github.com/shubhexists>"
 repository = "https://github.com/shubhexists/flux-mail"
