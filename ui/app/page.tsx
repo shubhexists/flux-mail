@@ -16,6 +16,12 @@ export default function Home() {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center relative overflow-hidden p-4">
       <AnimatedBackground />
@@ -30,6 +36,7 @@ export default function Home() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
               placeholder="Get your username"
               className="neutro-input flex-grow text-xl sm:text-2xl w-full"
             />
@@ -46,8 +53,8 @@ export default function Home() {
             Temp Mail Service
           </h2>
           <p className="text-xl sm:text-2xl">
-            Remember: Your mails are public. Don&apos;t use it for important mails.
-            Use it to suscribe for all unwanted services.
+            Remember: Your mails are public. Don&apos;t use it for important
+            mails. Use it to subscribe to all unwanted services.
           </p>
         </div>
       </div>

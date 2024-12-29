@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/mailparser": "^3.4.5",
+    "mailparser": "^3.7.2",
     "next": "15.1.2",
     "pg": "^8.13.1",
     "react": "^19.0.0",

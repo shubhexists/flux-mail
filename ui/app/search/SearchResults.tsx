@@ -5,12 +5,13 @@ import ThemeToggle from "../../components/ThemeToggle";
 import { Suspense, useEffect, useState } from "react";
 import { searchEmails } from "@/app/actions/actions";
 import { useSearchParams, useRouter } from "next/navigation";
+import { SemiParserEmail } from "@/hooks/parseEmail";
 
 export interface Email {
   date: string;
   sender: string;
   recipients: string;
-  data: string;
+  data: SemiParserEmail;
 }
 
 function SearchResultsContent() {
@@ -45,7 +46,7 @@ function SearchResultsContent() {
   }, [query]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-center text-2xl">Loading...</div>;
   }
 
   const selectedEmail = selectedEmailId
@@ -62,41 +63,51 @@ function SearchResultsContent() {
           >
             BACK
           </Link>
-          <div className="neutro-box p-8">
-            <h1 className="text-6xl font-bold mb-4">
-              {selectedEmail.sender.toUpperCase()}
+          <div className="neutro-box p-8 overflow-hidden">
+            <h1 className="text-3xl sm:text-6xl font-bold mb-4 break-words">
+              {selectedEmail.data.subject}
             </h1>
-            <p className="text-3xl mb-4">
+            <p className="text-2xl sm:text-3xl mb-4">
               {new Date(selectedEmail.date).toLocaleDateString()}
             </p>
-            <p className="text-2xl mb-4">To: {selectedEmail.recipients}</p>
-            <p className="text-2xl">{selectedEmail.data}</p>
+            <p className="text-xl sm:text-2xl mb-4 break-words">
+              From: {selectedEmail.data.from}
+            </p>
+            <p className="text-xl sm:text-2xl mb-4 break-words">
+              To: {selectedEmail.recipients}
+            </p>
+            <p className="text-xl sm:text-2xl whitespace-pre-wrap break-words">
+              <div
+                dangerouslySetInnerHTML={{ __html: selectedEmail.data.html }}
+              ></div>
+            </p>
           </div>
         </>
       ) : (
         <>
-          <h2 className="text-4xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl font-bold mb-6 break-words">
             Mails for &quot;{query}@flux.shubh.sh&quot;
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {emails.map((email, index) => (
               <Link href={`/search?q=${query}&email=${index}`} key={index}>
                 <div className="neutro-box p-6 hover:bg-accent transition-colors">
-                  <h2 className="text-4xl font-bold mb-2">
-                    {email.sender.toUpperCase()}
+                  <h2 className="text-3xl sm:text-4xl font-bold mb-2 break-words">
+                    {email.data.subject}
                   </h2>
-                  <p className="text-2xl">
+                  <p className="text-xl sm:text-2xl">
                     {new Date(email.date).toLocaleDateString()}
                   </p>
-                  <p className="text-lg truncate">{email.data}</p>
+                  <p className="text-lg truncate">{email.data.toString()}</p>
                 </div>
               </Link>
             ))}
           </div>
           {emails.length === 0 && (
-            <p className="text-2xl text-center">
-              No mails found. Try sending a mail to <br></br>&apos;{query}
-              @flux.shubh.sh&apos; <br></br> and Try Again.
+            <p className="text-xl sm:text-2xl text-center">
+              No mails found. Try sending a mail to <br />
+              &apos;{query}@flux.shubh.sh&apos; <br />
+              and Try Again.
             </p>
           )}
         </>
@@ -107,17 +118,19 @@ function SearchResultsContent() {
 
 export default function SearchResults() {
   return (
-    <div className="space-y-8">
-      <header className="flex justify-between items-center mb-12">
+    <div className="space-y-8 p-4">
+      <header className="flex flex-col sm:flex-row justify-between items-center mb-12 gap-4">
         <Link
           href="/"
-          className="text-6xl font-bold hover:text-accent transition-colors"
+          className="text-4xl sm:text-6xl font-bold hover:text-accent transition-colors"
         >
           Flux Mail
         </Link>
         <ThemeToggle />
       </header>
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense
+        fallback={<div className="text-center text-2xl">Loading...</div>}
+      >
         <SearchResultsContent />
       </Suspense>
     </div>
