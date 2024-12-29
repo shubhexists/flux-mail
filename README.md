@@ -16,8 +16,9 @@ To use the hosted version - [https://flux-mail.shubh.sh](https://flux-mail.shubh
 To run your own version of Flux Mail on localhost, use the  library published on [Crates.io](https://crates.io/crates/flux-mail)
 
 ```
-cargo install flux-mail
+cargo add flux-mail
 ```
+
 Refer to [main.rs](https://github.com/shubhexists/flux-mail/blob/master/src/main.rs) for usage of the library.
 
 ### Thanks

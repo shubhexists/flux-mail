@@ -53,8 +53,12 @@ export default function Home() {
             Temp Mail Service
           </h2>
           <p className="text-xl sm:text-2xl">
-            Remember: Your mails are public. Don&apos;t use it for important
-            mails. Use it to subscribe to all unwanted services.
+            1) Your mails are public. Don&apos;t use it for important mails. Use
+            it to subscribe to all unwanted services.
+          </p>
+          <p className="text-xl sm:text-2xl mt-3">
+            2) Your mails will be cleared from the database to prevent junk
+            after 7 days. Please save all the data that you might need later!
           </p>
         </div>
       </div>
