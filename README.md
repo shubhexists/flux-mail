@@ -4,6 +4,10 @@ A self-hosted Temp Mail service written in Rust 🦀.
 
 To use the hosted version - [https://flux-mail.shubh.sh](https://flux-mail.shubh.sh)
 
+:accessibility: SMTP SERVER HOSTED AT -> flux.shubh.sh 
+
+Any mails to "something"@flux.shubh.sh will be handled by the deployed SMTP server.
+
 ### Steps - 
 1) Go to the website and enter any username. Remember your `username` is public, so "DO NOT" use it for confidential mails.
 2) You'll get the email of the form `{username}@flux.shubh.sh`. Use it for anything you want :)
