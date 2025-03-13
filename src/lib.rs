@@ -28,18 +28,18 @@ pub(crate) fn is_valid_email(email: &str) -> bool {
 pub async fn start_server(addr: SocketAddr, domain: String) -> Result<(), Box<dyn Error>> {
     let listener: TcpListener = TcpListener::bind(&addr).await?;
     let domain: Arc<String> = Arc::new(domain);
-    let db: Arc<DatabaseClient> = Arc::new(DatabaseClient::connect().await?);
+    // let db: Arc<DatabaseClient> = Arc::new(DatabaseClient::connect().await?);
     tracing::info!("Server Started On Port: {}", addr);
 
     loop {
         let (stream, _addr): (TcpStream, SocketAddr) = listener.accept().await?;
         let domain: Arc<String> = Arc::clone(&domain);
-        let db: Arc<DatabaseClient> = Arc::clone(&db);
+        // let db: Arc<DatabaseClient> = Arc::clone(&db);
 
         tokio::task::LocalSet::new()
             .run_until(async move {
                 tracing::info!("Ping received on SMTP Server");
-                let smtp: Server = Server::new(domain.as_str(), stream, &db).await?;
+                let smtp: Server = Server::new(domain.as_str(), stream).await?;
                 match timeout(Duration::from_secs(300), smtp.connection()).await {
                     Ok(Ok(_)) => Ok(()),
                     Ok(Err(e)) => Err(e),

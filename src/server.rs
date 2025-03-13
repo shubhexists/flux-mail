@@ -9,33 +9,29 @@ use tokio::{
 };
 use tracing::{span::Entered, Level, Span};
 
-pub struct Server<'a> {
+pub struct Server {
     connection: tokio::net::TcpStream,
     state_handler: HandleCurrentState,
-    db: &'a Arc<DatabaseClient>,
 }
 
-impl<'a> Server<'a> {
+impl Server {
     pub async fn new(
         server_domain: impl AsRef<str>,
         connection: tokio::net::TcpStream,
-        db: &'a Arc<DatabaseClient>,
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             connection,
             state_handler: HandleCurrentState::new(server_domain),
-            db,
         })
     }
 
     pub async fn connection(mut self) -> Result<(), Box<dyn Error>> {
         let span: Span = tracing::span!(Level::INFO, "MAIL");
         let _enter: Entered<'_> = span.enter();
-
         self.connection.write_all(INITIAL_GREETING).await?;
         tracing::info!("Greeted");
-
         let mut buffer: Vec<u8> = vec![0; 65536];
+        let db = Arc::new(DatabaseClient::connect().await?);
         loop {
             match timeout(TIMEOUT, self.connection.read(&mut buffer)).await {
                 Ok(Ok(0)) => {
@@ -50,11 +46,7 @@ impl<'a> Server<'a> {
                             return Err(Box::new(e));
                         }
                     };
-                    match self
-                        .state_handler
-                        .process_smtp_command(message, &self.db)
-                        .await
-                    {
+                    match self.state_handler.process_smtp_command(message, &db).await {
                         Ok(response) => {
                             if response != b"" {
                                 self.connection.write_all(response).await?;
