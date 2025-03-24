@@ -1,0 +1,17 @@
+# nixpacks.toml
+
+[build]
+plan = "rust"
+
+# Specify extra packages if needed
+[variables]
+CARGO_PROFILE = "release"
+
+[phases.setup]
+nixPkgs = ["openssl", "pkg-config", "curl", "git", "gcc"]
+
+[phases.build]
+cmds = ["cargo build --release"]
+
+[phases.start]
+cmds = ["sudo ./target/release/flux-mail"]

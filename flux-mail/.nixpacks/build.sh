@@ -1,0 +1,1 @@
+docker build flux-mail -f flux-mail/.nixpacks/Dockerfile -t 1751ff20-3496-4819-a1f1-9a4a75be2936 --build-arg CARGO_PROFILE=release --build-arg NIXPACKS_METADATA=rust --build-arg ROCKET_ADDRESS=0.0.0.0
