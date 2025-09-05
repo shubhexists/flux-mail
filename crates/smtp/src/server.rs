@@ -1,7 +1,6 @@
-use crate::{
-    database::DatabaseClient, errors::SmtpErrorCode, smtp::HandleCurrentState, CLOSING_CONNECTION,
-    INITIAL_GREETING, TIMEOUT,
-};
+use crate::{smtp::HandleCurrentState, CLOSING_CONNECTION, INITIAL_GREETING, TIMEOUT};
+use flux_database::database::DatabaseClient;
+use flux_types::errors::SmtpErrorCode;
 use std::{error::Error, sync::Arc};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},

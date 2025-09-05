@@ -1,0 +1,21 @@
+[package]
+name = "flux-mail"
+description = "A simple implementation of SMTP Protocol as a temporary mail service in Rust"
+version = "0.2.1"
+edition = "2021"
+authors = ["Shubham singh	<github: github.com/shubhexists>"]
+repository = "https://github.com/shubhexists/flux-mail"
+license-file = "LICENSE"
+categories = ["email"]
+keywords = ["smtp", "email", "mail"]
+readme = "README.md"
+
+[dependencies]
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tokio-postgres = { workspace = true }
+chrono = { workspace = true }
+dotenv = { workspace = true }
+flux-types = { workspace = true }
+flux-database = { workspace = true }

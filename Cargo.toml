@@ -1,19 +1,17 @@
-[package]
-name = "flux-mail"
-description = "A simple implementation of SMTP Protocol as a temporary mail service in Rust"
-version = "0.2.1"
-edition = "2021"
-author = "Shubham singh	<github: github.com/shubhexists>"
-repository = "https://github.com/shubhexists/flux-mail"
-license-file = "LICENSE"
-categories = ["email"]
-keywords = ["smtp", "email", "mail"]
-readme = "README.md"
+[workspace]
+resolver = "3"
+members = ["crates/*"]
 
-[dependencies]
+[workspace.dependencies]
 tokio = { version = "1.41.1", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.18"
 tokio-postgres = "0.7"
 chrono = "0.4.39"
 dotenv = "0.15"
+flux-database = { path = "crates/database" }
+flux-http = { path = "crates/http" }
+flux-types = { path = "crates/types" }
+reqwest = { version = "0.12.23", features = ["json"] }
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }

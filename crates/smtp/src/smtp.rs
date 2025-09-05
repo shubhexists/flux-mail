@@ -1,10 +1,11 @@
 use crate::{
-    database::DatabaseClient,
+    is_valid_email, AUTH_OK, CLOSING_CONNECTION, DATA_READY_PROMPT, MAX_EMAIL_SIZE,
+    MAX_RECIPIENT_COUNT, SUCCESS_RESPONSE,
+};
+use flux_database::database::DatabaseClient;
+use flux_types::{
     errors::{SmtpErrorCode, SmtpResponseError},
-    is_valid_email,
     types::{CurrentStates, Email, SMTPResult},
-    AUTH_OK, CLOSING_CONNECTION, DATA_READY_PROMPT, MAX_EMAIL_SIZE, MAX_RECIPIENT_COUNT,
-    SUCCESS_RESPONSE,
 };
 use std::{str::SplitWhitespace, sync::Arc};
 use tracing::{error, info};

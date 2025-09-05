@@ -1,9 +1,8 @@
 use chrono::DateTime;
+use flux_types::types::Email;
 use std::{env, error::Error};
 use tokio_postgres::{Client, NoTls};
 use tracing::{error, info};
-
-use crate::types::Email;
 
 pub struct DatabaseClient {
     pub db: Client,
@@ -45,6 +44,28 @@ impl DatabaseClient {
         CREATE INDEX IF NOT EXISTS mail_date ON mail(date);
         CREATE INDEX IF NOT EXISTS mail_recipients ON mail(recipients);
         CREATE INDEX IF NOT EXISTS mail_date_recipients ON mail(date, recipients);
+
+        CREATE TABLE IF NOT EXISTS quota (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            address TEXT NOT NULL UNIQUE,
+            limit INTEGER NOT NULL,
+            completed INTEGER NOT NULL DEFAULT 0
+        );
+
+        CREATE INDEX IF NOT EXISTS quota_address_idx ON quota(address);
+        CREATE TABLE IF NOT EXISTS user_config (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mail TEXT NOT NULL UNIQUE,
+            address TEXT NOT NULL,
+            web_hook_address TEXT
+        );
+        
+        CREATE INDEX IF NOT EXISTS user_config_mail_idx ON user_config(mail);
+        ALTER TABLE user_config
+            ADD CONSTRAINT fk_user_config_address
+            FOREIGN KEY (address) REFERENCES quota(address)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE;
         ";
 
         if let Err(e) = client.batch_execute(sql).await {

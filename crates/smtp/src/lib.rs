@@ -1,9 +1,5 @@
-mod database;
-mod errors;
 pub mod server;
 mod smtp;
-mod types;
-use database::DatabaseClient;
 use server::Server;
 use std::sync::Arc;
 use std::time::Duration;
@@ -28,14 +24,11 @@ pub(crate) fn is_valid_email(email: &str) -> bool {
 pub async fn start_server(addr: SocketAddr, domain: String) -> Result<(), Box<dyn Error>> {
     let listener: TcpListener = TcpListener::bind(&addr).await?;
     let domain: Arc<String> = Arc::new(domain);
-    // let db: Arc<DatabaseClient> = Arc::new(DatabaseClient::connect().await?);
     tracing::info!("Server Started On Port: {}", addr);
 
     loop {
         let (stream, _addr): (TcpStream, SocketAddr) = listener.accept().await?;
         let domain: Arc<String> = Arc::clone(&domain);
-        // let db: Arc<DatabaseClient> = Arc::clone(&db);
-
         tokio::task::LocalSet::new()
             .run_until(async move {
                 tracing::info!("Ping received on SMTP Server");
@@ -49,37 +42,4 @@ pub async fn start_server(addr: SocketAddr, domain: String) -> Result<(), Box<dy
             .await
             .ok();
     }
-}
-
-pub fn clear_old_mails(period: tokio::time::Duration) {
-    std::thread::spawn(move || -> Result<(), Box<dyn Error + Send + Sync>> {
-        let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_current_thread()
-            .enable_time()
-            .enable_io()
-            .build()
-            .map_err(|e: std::io::Error| format!("Failed to build async runtime: {}", e))?;
-
-        runtime.block_on(async move {
-            let local: tokio::task::LocalSet = tokio::task::LocalSet::new();
-            local.spawn_local(async move {
-                let db: DatabaseClient = match DatabaseClient::connect().await {
-                    Ok(db) => db,
-                    Err(e) => {
-                        tracing::error!("Failed to connect to database: {}", e);
-                        return;
-                    }
-                };
-                let mut interval: tokio::time::Interval = tokio::time::interval(period);
-                interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-                loop {
-                    interval.tick().await;
-                    if let Err(e) = db.delete_old_mail().await {
-                        tracing::error!("Failed to delete old mail: {}", e);
-                    }
-                }
-            });
-            local.await;
-        });
-        Ok(())
-    });
 }

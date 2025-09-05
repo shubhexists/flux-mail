@@ -1,5 +1,6 @@
 use dotenv::dotenv;
-use flux_mail::{clear_old_mails, start_server};
+use flux_database::clear_old_mails::clear_old_mails;
+use flux_mail::start_server;
 use tokio::time;
 use tracing::{error, info};
 
