@@ -34,39 +34,50 @@ impl DatabaseClient {
             }
         });
 
-        let sql: &str = "CREATE TABLE IF NOT EXISTS mail (
-    date TEXT,
-    sender TEXT,
-    recipients TEXT,
-    data TEXT
-);
-CREATE INDEX IF NOT EXISTS mail_date ON mail(date);
-CREATE INDEX IF NOT EXISTS mail_recipients ON mail(recipients);
-CREATE INDEX IF NOT EXISTS mail_date_recipients ON mail(date, recipients);
+        let sql: &str = "
+            CREATE TABLE IF NOT EXISTS mail (
+                date TEXT,
+                sender TEXT,
+                recipients TEXT,
+                data TEXT
+            );
+            CREATE INDEX IF NOT EXISTS mail_date ON mail(date);
+            CREATE INDEX IF NOT EXISTS mail_recipients ON mail(recipients);
+            CREATE INDEX IF NOT EXISTS mail_date_recipients ON mail(date, recipients);
 
-CREATE TABLE IF NOT EXISTS quota (
-    id SERIAL PRIMARY KEY,
-    address TEXT NOT NULL UNIQUE,
-    quota_limit INTEGER NOT NULL,
-    completed INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS quota_address_idx ON quota(address);
+            CREATE TABLE IF NOT EXISTS quota (
+                id SERIAL PRIMARY KEY,
+                address TEXT NOT NULL UNIQUE,
+                quota_limit INTEGER NOT NULL,
+                completed INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE INDEX IF NOT EXISTS quota_address_idx ON quota(address);
+            CREATE TABLE IF NOT EXISTS user_config (
+                id SERIAL PRIMARY KEY,
+                mail TEXT NOT NULL UNIQUE,
+                address TEXT NOT NULL,
+                web_hook_address TEXT
+            );
+            CREATE INDEX IF NOT EXISTS user_config_mail_idx ON user_config(mail);
 
-CREATE TABLE IF NOT EXISTS user_config (
-    id SERIAL PRIMARY KEY,
-    mail TEXT NOT NULL UNIQUE,
-    address TEXT NOT NULL,
-    web_hook_address TEXT
-);
-CREATE INDEX IF NOT EXISTS user_config_mail_idx ON user_config(mail);
-
-ALTER TABLE user_config
-    ADD CONSTRAINT fk_user_config_address
-    FOREIGN KEY (address)
-    REFERENCES quota(address)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE;
-        ";
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM information_schema.table_constraints
+                    WHERE constraint_name = 'fk_user_config_address'
+                    AND table_name = 'user_config'
+                ) THEN
+                    ALTER TABLE user_config
+                        ADD CONSTRAINT fk_user_config_address
+                        FOREIGN KEY (address)
+                        REFERENCES quota(address)
+                        ON DELETE CASCADE
+                        ON UPDATE CASCADE;
+                END IF;
+            END;
+            $$;
+";
 
         if let Err(e) = client.batch_execute(sql).await {
             error!("Failed to execute initialization queries: {}", e);
