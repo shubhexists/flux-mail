@@ -1,2 +1,4 @@
+packages:
+  - '.'
 allowBuilds:
   '@vercel/speed-insights': true
